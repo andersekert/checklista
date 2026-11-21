@@ -1,0 +1,15 @@
+name: Håll databasen vaken
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Anropa databasen
+        run: |
+          curl -fsS -X POST "https://vlzkwvhxajzwlruwgqjk.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_lR5uHkxuHF0uN_oKTd2vdQ_fDm-RYhr" \
+            -H "Authorization: Bearer sb_publishable_lR5uHkxuHF0uN_oKTd2vdQ_fDm-RYhr" \
+            -H "Content-Type: application/json" -d '{}'

@@ -160,6 +160,11 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
   var sb = supabase.createClient(URL_, KEY_, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   var needsPassword = /type=(invite|recovery)/.test(location.hash);
   var uid = null, rows = null, listeners = [];
+  var CK = "checklista:cache", PK = "checklista:pending";
+  function lsGet(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  var pending = lsGet(PK, {});
+  function note(t) { var n = document.getElementById("status"); if (!n) return; n.textContent = t; n.hidden = !t; }
   function clone(x) { return JSON.parse(JSON.stringify(x)); }
   function E(tag, props, kids) {
     var n = document.createElement(tag);
@@ -211,9 +216,11 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
   var gateResolve, gatePromise = new Promise(function (r) { gateResolve = r; });
   function go() {
     sb.auth.getSession().then(function (r) {
-      var s = r.data.session;
+      var s = r.data && r.data.session;
       if (s && needsPassword) { showSetPassword(); return; }
       if (s) { uid = s.user.id; gateResolve(s); return; }
+      var c = lsGet(CK, null);
+      if (r.error && c && c.uid && !needsPassword) { uid = c.uid; gateResolve(null); return; }
       showLogin();
     });
   }
@@ -226,19 +233,51 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
   }
   function emit() { listeners.forEach(function (l) { l.ok(snapshotKind(l.kind)); }); }
   function fail(e) { listeners.forEach(function (l) { if (l.err) l.err(e); }); }
+  function localSave() { lsSet(CK, { uid: uid, rows: rows }); }
+  function applyLocal(id, data) {
+    rows = (rows || []).filter(function (r) { return r.id !== id; });
+    if (data !== null) rows.push({ id: id, data: clone(data) });
+    localSave();
+  }
+  function sendPending() {
+    var ids = Object.keys(pending);
+    if (!ids.length) return Promise.resolve(true);
+    return Promise.all(ids.map(function (id) {
+      var p = pending[id];
+      var op = p.data === null ? sb.from("checklista").delete().eq("id", id)
+        : sb.from("checklista").upsert({ id: id, data: p.data, updated_at: new Date().toISOString() });
+      return op.then(function (r) {
+        if (r.error) throw r.error;
+        if (pending[id] === p) { delete pending[id]; lsSet(PK, pending); }
+      });
+    })).then(function () { return true; }, function () { return false; });
+  }
+  function offlineNote() { note("Ingen kontakt. Ändringar sparas på enheten och skickas när du är online igen."); }
   function refresh() {
-    return sb.from("checklista").select("id,data").then(function (r) {
-      if (r.error) throw r.error;
-      rows = r.data;
-      if (!rows.some(function (x) { return x.id === "list:rep"; })) {
-        return sb.from("checklista").upsert({ id: "list:rep", data: SEED.rep }).then(function (w) {
-          if (w.error) throw w.error; rows.push({ id: "list:rep", data: SEED.rep });
+    return sendPending().then(function (sent) {
+      return sb.from("checklista").select("id,data").then(function (r) {
+        if (r.error) throw r.error;
+        var fresh = r.data;
+        Object.keys(pending).forEach(function (id) {
+          fresh = fresh.filter(function (x) { return x.id !== id; });
+          if (pending[id].data !== null) fresh.push({ id: id, data: pending[id].data });
         });
-      }
-    }).then(emit, fail);
+        rows = fresh;
+        if (!rows.some(function (x) { return x.id === "list:rep"; })) {
+          return sb.from("checklista").upsert({ id: "list:rep", data: SEED.rep }).then(function (w) {
+            if (w.error) throw w.error; rows.push({ id: "list:rep", data: SEED.rep });
+          });
+        }
+      }).then(function () { localSave(); note(sent ? "" : "Ändringar väntar på att skickas."); emit(); });
+    }).catch(function (e) {
+      var c = lsGet(CK, null);
+      if (c && c.uid === uid && c.rows) { rows = c.rows; offlineNote(); emit(); } else fail(e);
+    });
   }
   function write(id, body) {
-    return sb.from("checklista").upsert({ id: id, data: body, updated_at: new Date().toISOString() }).then(function (r) { if (r.error) throw r.error; });
+    applyLocal(id, body);
+    pending[id] = { data: body }; lsSet(PK, pending);
+    return sendPending().then(function (ok) { if (ok) note(""); else { offlineNote(); setTimeout(offlineNote, 400); } });
   }
   var db = {
     collection: function () { return { onSnapshot: function (ok, err) { listeners.push({ kind: "lists", ok: ok, err: err }); if (rows) setTimeout(function () { ok(snapshotKind("lists")); }, 0); } }; },
@@ -246,7 +285,7 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
       var isTicks = /\/ticks$/.test(path), id = isTicks ? "ticks:" + uid : "list:" + path.split("/")[1];
       return {
         set: function (body) { return write(id, body); },
-        delete: function () { return sb.from("checklista").delete().eq("id", id).then(function (r) { if (r.error) throw r.error; }); },
+        delete: function () { return write(id, null); },
         onSnapshot: function (ok, err) { listeners.push({ kind: "ticks", ok: ok, err: err }); if (rows) setTimeout(function () { ok(snapshotKind("ticks")); }, 0); }
       };
     }
@@ -820,5 +859,6 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
   });
 })();
 </script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});</script>
 
 </body></html>
