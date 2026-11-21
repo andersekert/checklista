@@ -29,11 +29,15 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 button { font: inherit; color: inherit; cursor: pointer; border-radius: 0; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); padding-block: 8px 12px; }
-h1 { margin: 0; min-height: 2.75rem; display: flex; align-items: center; gap: 0.3em; font-size: 1rem; font-weight: 400; }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); padding-block: 4px 10px; }
+h1 { margin: 0; min-height: 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 1rem; font-weight: 400; }
+#logoutBtn { min-height: 2.75rem; padding: 0 0 0 8px; background: none; border: 0; font-size: 0.875rem; color: var(--ink-soft); text-decoration: underline; }
+.toolwrap { padding-block: 12px 0; }
+.toolwrap .tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.75rem, 1fr)); gap: 6px; }
+.toolwrap .tool { padding: 0 0.25rem; font-size: 0.8125rem; line-height: 1.2; }
 .mark { font-weight: 700; }
 #picker { width: 100%; min-height: 2.875rem; padding: 0.5rem 2.25rem 0.5rem 0.75rem; font: 700 1.125rem/1.25 var(--font); color: var(--ink); border: 1px solid var(--ink); border-radius: 0; appearance: none; -webkit-appearance: none; background-color: var(--paper); background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-size: 6px 6px; background-position: right 18px center, right 12px center; background-repeat: no-repeat; }
-.tally { display: flex; align-items: center; gap: 12px; margin-block: 12px; }
+.tally { display: flex; align-items: center; gap: 12px; margin-block: 10px 0; }
 .bar { flex: 1; min-width: 0; height: 2px; background: var(--line); }
 #fill { height: 100%; width: 0; background: var(--ink); transition: width .2s; }
 #count { font-size: 0.875rem; font-weight: 500; white-space: nowrap; }
@@ -44,7 +48,7 @@ h1 { margin: 0; min-height: 2.75rem; display: flex; align-items: center; gap: 0.
 #status.bad { color: var(--error); }
 #retry { margin-left: 6px; min-height: 2.75rem; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; }
 
-main { padding-block: 16px 110px; }
+main { padding-block: 8px 110px; }
 .blurb { margin: 0 0 16px; color: var(--ink-soft); }
 #list > section:first-of-type { border-top: 1px solid var(--ink); }
 section { border-bottom: 1px solid var(--line); padding-block: 4px; }
@@ -112,12 +116,16 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
 
 <header class="gutter">
   <div class="inner">
-    <h1><span class="mark">ekert</span> / Reportagechecklistan</h1>
+    <h1><span><span class="mark">ekert</span> / Reportagechecklistan</span><button id="logoutBtn" type="button" hidden>Logga ut</button></h1>
     <select id="picker" aria-label="Välj lista" disabled></select>
     <div class="tally">
       <div class="bar"><div id="fill"></div></div>
       <div id="count" aria-live="polite"></div>
     </div>
+  </div>
+</header>
+<div class="gutter toolwrap">
+  <div class="inner">
     <div class="tools">
       <button class="tool primary" id="newJob" type="button" hidden>Nytt jobb</button>
       <button class="tool" id="undoBtn" type="button" hidden>Ångra</button>
@@ -126,11 +134,10 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
       <button class="tool" id="editBtn" type="button" hidden>Redigera</button>
       <button class="tool" id="copyBtn" type="button" hidden>Kopiera till ny lista</button>
       <button class="tool del" id="deleteBtn" type="button" hidden>Ta bort listan</button>
-      <button class="tool" id="logoutBtn" type="button" hidden>Logga ut</button>
     </div>
     <p id="status" hidden></p>
   </div>
-</header>
+</div>
 
 <main class="gutter"><div class="inner" id="list"><p class="note">Hämtar listorna…</p></div></main>
 
