@@ -1,0 +1,720 @@
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><title>Reportagechecklistan</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Checklista"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme:light)"><meta name="theme-color" content="#111111" media="(prefers-color-scheme:dark)"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Grafisk profil "Svart på vitt" (PROFIL.md, profil/v1.css), kopierad hit eftersom en artifact inte kan ladda stilmallar från andra adresser. */
+:root {
+  --ink: #111111;
+  --ink-soft: #5e5e5e;
+  --line: #e4e4e4;
+  --paper: #ffffff;
+  --error: #b00020; /* Bara för felmeddelanden. */
+  --font: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #f2f2f2; --ink-soft: #a6a6a6; --line: #333333; --paper: #111111; --error: #ff8a80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #f2f2f2; --ink-soft: #a6a6a6; --line: #333333; --paper: #111111; --error: #ff8a80; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 1rem; line-height: 1.5; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: 44rem; margin: 0 auto; }
+button { font: inherit; color: inherit; cursor: pointer; border-radius: 0; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); padding-block: 8px 12px; }
+h1 { margin: 0; min-height: 2.75rem; display: flex; align-items: center; gap: 0.3em; font-size: 1rem; font-weight: 400; }
+.mark { font-weight: 700; }
+#picker { width: 100%; min-height: 2.875rem; padding: 0.5rem 2.25rem 0.5rem 0.75rem; font: 700 1.125rem/1.25 var(--font); color: var(--ink); border: 1px solid var(--ink); border-radius: 0; appearance: none; -webkit-appearance: none; background-color: var(--paper); background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-size: 6px 6px; background-position: right 18px center, right 12px center; background-repeat: no-repeat; }
+.tally { display: flex; align-items: center; gap: 12px; margin-block: 12px; }
+.bar { flex: 1; min-width: 0; height: 2px; background: var(--line); }
+#fill { height: 100%; width: 0; background: var(--ink); transition: width .2s; }
+#count { font-size: 0.875rem; font-weight: 500; white-space: nowrap; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tool { min-height: 2.75rem; padding: 0 1rem; background: var(--paper); border: 1px solid var(--ink); font-size: 0.875rem; font-weight: 500; }
+.tool[aria-pressed="true"], .tool.primary { background: var(--ink); color: var(--paper); font-weight: 700; }
+#status { font-size: 0.875rem; color: var(--ink-soft); margin: 8px 0 0; }
+#status.bad { color: var(--error); }
+#retry { margin-left: 6px; min-height: 2.75rem; background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; }
+
+main { padding-block: 16px 110px; }
+.blurb { margin: 0 0 16px; color: var(--ink-soft); }
+#list > section:first-of-type { border-top: 1px solid var(--ink); }
+section { border-bottom: 1px solid var(--line); padding-block: 4px; }
+h2 { margin: 0; }
+.head { display: flex; width: 100%; align-items: center; gap: 10px; min-height: 3.25rem; padding: 8px 0; background: none; border: 0; text-align: left; }
+.head .name { flex: 1; min-width: 0; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
+.head .sub { font-size: 0.875rem; font-weight: 400; color: var(--ink-soft); white-space: nowrap; }
+.chev { width: 9px; height: 9px; border-right: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg); margin: -3px 4px 0 2px; flex: none; transition: transform .15s; }
+.closed .chev { transform: rotate(-45deg); margin-top: 0; }
+ul { list-style: none; margin: 0; padding: 0 0 8px; }
+.item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; min-height: 2.75rem; cursor: pointer; }
+.item input { appearance: none; -webkit-appearance: none; display: grid; place-items: center; width: 24px; height: 24px; margin: 0; flex: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 0; cursor: pointer; }
+.item input:checked { background: var(--ink); }
+.item input:checked::after { content: ""; width: 7px; height: 13px; margin-top: -3px; border-right: 2px solid var(--paper); border-bottom: 2px solid var(--paper); transform: rotate(45deg); }
+.item span { min-width: 0; overflow-wrap: anywhere; }
+.item.done span { color: var(--ink-soft); text-decoration: line-through; }
+/* Lägg till och ta bort punkter direkt i listan. */
+li { display: flex; align-items: flex-start; }
+li .item { flex: 1; min-width: 0; }
+.x { flex: none; width: 2.75rem; height: 2.75rem; padding: 0; background: none; border: 0; color: var(--ink-soft); font-size: 1.375rem; line-height: 1; }
+.x:hover { color: var(--ink); }
+.addrow { display: flex; gap: 8px; padding: 4px 0 12px; }
+.addrow input { flex: 1; min-width: 0; min-height: 2.75rem; padding: 0 0.75rem; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 0; }
+.addrow input:focus { border-color: var(--ink); }
+.addrow button { flex: none; min-height: 2.75rem; padding: 0 1rem; background: var(--paper); border: 1px solid var(--ink); font-size: 0.875rem; font-weight: 500; }
+
+.edit-title, .edit-item, .edit-list { display: flex; gap: 6px; align-items: flex-start; padding-block: 5px; }
+.edit-title { padding-top: 12px; }
+.edit-list { flex-direction: column; align-items: stretch; padding-block: 12px; }
+.edit-list label { font-size: 0.875rem; font-weight: 500; }
+textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--ink); border-radius: 0; padding: 0.5rem 0.75rem; resize: none; overflow: hidden; }
+.edit-title textarea { font-weight: 700; }
+.icon { flex: none; width: 2.5rem; height: 2.75rem; background: var(--paper); border: 1px solid var(--line); font-size: 1rem; padding: 0; }
+.icon:disabled { opacity: .35; cursor: default; }
+.grip { width: 2.25rem; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-size: 1.25rem; line-height: 1; }
+.edit-item.dragging { opacity: .35; }
+.ghost { position: fixed; z-index: 9; pointer-events: none; background: var(--paper); border: 1px solid var(--ink); padding: 0.5rem 0.75rem; min-height: 2.75rem; overflow-wrap: anywhere; }
+.sel { appearance: none; -webkit-appearance: none; display: grid; place-items: center; width: 24px; height: 24px; margin: 10px 4px 0 0; flex: none; background: var(--paper); border: 1px solid var(--ink); border-radius: 0; cursor: pointer; }
+.sel:checked { background: var(--ink); }
+.sel:checked::after { content: ""; width: 7px; height: 13px; margin-top: -3px; border-right: 2px solid var(--paper); border-bottom: 2px solid var(--paper); transform: rotate(45deg); }
+.edit-item.selected { background: var(--line); }
+#selbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding-top: 10px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); }
+#selbar .inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+#selbar button { min-height: 2.75rem; background: none; border: 1px solid currentColor; padding: 0 1rem; color: inherit; font-weight: 700; }
+.acts { display: flex; gap: 8px; }
+#movePanel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; background: var(--paper); border-top: 1px solid var(--ink); padding-top: 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+#movePanel .inner { display: grid; gap: 8px; }
+#movePanel p { margin: 0; font-weight: 700; }
+#movePanel label { font-size: 0.875rem; font-weight: 500; }
+#movePanel select { min-height: 2.75rem; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--ink); border-radius: 0; padding: 0 0.5rem; width: 100%; }
+#movePanel .acts { margin-top: 6px; }
+.dropline { position: fixed; z-index: 8; height: 3px; background: var(--ink); pointer-events: none; }
+.add { display: block; min-height: 2.75rem; margin-block: 6px 12px; background: var(--paper); border: 1px solid var(--ink); padding: 0 1rem; font-size: 0.875rem; font-weight: 500; }
+#addSection { margin-top: 18px; }
+
+.note { padding: 28px 0; color: var(--ink-soft); }
+#toast { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding-top: 10px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); }
+#toast .inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+#undo { min-height: 2.75rem; background: none; border: 1px solid currentColor; padding: 0 1rem; color: inherit; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="gutter">
+  <div class="inner">
+    <h1><span class="mark">ekert</span> / Reportagechecklistan</h1>
+    <select id="picker" aria-label="Välj lista" disabled></select>
+    <div class="tally">
+      <div class="bar"><div id="fill"></div></div>
+      <div id="count" aria-live="polite"></div>
+    </div>
+    <div class="tools">
+      <button class="tool" id="undoBtn" type="button" hidden>Ångra</button>
+      <button class="tool" id="filterBtn" type="button" aria-pressed="false">Bara kvar</button>
+      <button class="tool" id="resetBtn" type="button">Bocka ur alla</button>
+      <button class="tool" id="editBtn" type="button" hidden>Redigera</button>
+      <button class="tool" id="copyBtn" type="button" hidden>Kopiera till ny lista</button>
+      <button class="tool del" id="deleteBtn" type="button" hidden>Ta bort listan</button>
+    </div>
+    <p id="status" hidden></p>
+  </div>
+</header>
+
+<main class="gutter"><div class="inner" id="list"><p class="note">Hämtar listorna…</p></div></main>
+
+<div id="selbar" class="gutter" hidden>
+  <div class="inner"><span id="selText"></span><span class="acts"><button id="moveBtn" type="button">Flytta till…</button><button id="clearSel" type="button">Avmarkera</button></span></div>
+</div>
+
+<div id="movePanel" class="gutter" hidden>
+  <div class="inner">
+    <p id="moveTitle"></p>
+    <label for="moveList">Lista</label><select id="moveList"></select>
+    <label for="moveSec">Avsnitt (punkterna hamnar sist)</label><select id="moveSec"></select>
+    <div class="acts"><button class="tool primary" id="moveGo" type="button">Flytta</button><button class="tool" id="moveCancel" type="button">Avbryt</button></div>
+  </div>
+</div>
+
+<div id="toast" class="gutter" hidden>
+  <div class="inner"><span id="toastText"></span><button id="undo" type="button">Ångra</button></div>
+</div>
+
+<script>
+// Lagring i webbläsaren på den här enheten. Ersätter databasen som sidan använder i Claude.
+(function () {
+  if (window.claude && window.claude.use) return;
+  var KEY = "checklista:db";
+  var SEED = {"rep": {"blurb": "Lägg till och ta bort punkter direkt i listan.", "id": "rep", "order": 1, "sections": [{"id": "s1", "items": [{"id": "i1-7", "text": "Lokala regler för fotografering, drönare och inspelning kontrollerade"}, {"id": "i21-1", "text": "Biljetter, boende och lokala transporter bokade och sparade offline"}, {"id": "i21-2", "text": "Kontanter i lokal valuta samt två betalkort"}, {"id": "i21-3", "text": "Kopior av pass och försäkring, separat från originalen och digitala"}, {"id": "i2-1", "text": "Pass, visum och eventuellt pressackreditering eller journalistvisum"}, {"id": "i2-2", "text": "Presslegitimation och uppdragsbrev från redaktionen"}, {"id": "i21-4", "text": "Kläder anpassade efter väder och lokala normer och formella möten"}, {"id": "i2-4", "text": "UD:s reseinformation läst och riskbedömning gjord"}, {"id": "i21-7", "text": "Mediciner"}, {"id": "i2-5", "text": "Vaccinationer, mediciner och reseapotek"}, {"id": "i2-7", "text": "Ambassadens nummer och registrering hos UD:s Svensklistan"}, {"id": "zvcovabf", "text": "Utrustningslista med serienummer och eventuell ATA-carnet"}, {"id": "i3-1", "text": "Rensad telefon och dator vid resa till känsliga länder"}], "title": "Innan resan: research och upplägg"}, {"id": "gy4p70ld", "items": [{"id": "i10-1", "text": "Kamera FX6"}, {"id": "i10-4", "text": "Optik 24-105"}, {"id": "i10-5", "text": "Optik 70-200"}, {"id": "i9-1", "text": "Kamerastativ"}, {"id": "i9-3", "text": "Platta"}, {"id": "i9-2", "text": "Stativfötter"}, {"id": "i10-8", "text": "4 st batteri 99 Wh"}, {"id": "i10-9", "text": "2 st batteri 150 Wh"}, {"id": "i10-11", "text": "Minneskort"}, {"id": "i10-12", "text": "Regnskydd"}, {"id": "i14-1", "text": "Batteriladdare"}], "title": "Kamera-1"}, {"id": "zec4hzh1", "items": [{"id": "i10-6", "text": "2 st ljudmottagare"}, {"id": "i10-7", "text": "2 st sladdar ljudmottagare till kamera"}, {"id": "i10-10", "text": "Hörlurar"}, {"id": "i11-5", "text": "20 st AA-batterier"}, {"id": "i11-1", "text": "2 st sändare"}, {"id": "i11-2", "text": "3 st myggor"}, {"id": "i11-3", "text": "Vindskydd, dolda klisterlappar"}, {"id": "i11-4", "text": "Handmic trådlös"}, {"id": "i11-6", "text": "Handmic XLR"}, {"id": "i11-7", "text": "XLR-kabel"}], "title": "Ljud"}, {"id": "k33fmivj", "items": [{"id": "i18-1", "text": "Lampa"}, {"id": "i18-2", "text": "Lampstativ"}, {"id": "i18-3", "text": "Softbox"}, {"id": "i10-2", "text": "Kameralampa"}], "title": "Ljus"}, {"id": "s5gosut5", "items": [{"id": "i12-1", "text": "Kamera 2"}, {"id": "i12-2", "text": "Optik 35"}, {"id": "i12-3", "text": "Sladd ljudmottagare till kamera"}, {"id": "i12-4", "text": "Batterier"}, {"id": "i12-5", "text": "Minneskort"}, {"id": "25s5zzxj", "text": "Laddare"}, {"id": "i17-1", "text": "Ljud kablage ev extra ljud"}], "title": "Kamera-2"}, {"id": "s9", "items": [{"id": "i13-1", "text": "GoPro"}, {"id": "i13-2", "text": "Minneskort"}, {"id": "i19-1", "text": "Groda"}, {"id": "i19-2", "text": "2 st Laddare USB-C"}, {"id": "bd6gdl1w", "text": "Pensel, kameravård"}, {"id": "5euis333", "text": "Airpods"}], "title": "Utrustning"}, {"id": "jbijm5xz", "items": [{"id": "i17-2", "text": "1 BNC"}, {"id": "i17-3", "text": "1 XLR"}, {"id": "i17-4", "text": "Hörlurar"}, {"id": "i19-3", "text": "Tejp"}, {"id": "6x5mi2rl", "text": "3.5 Split"}], "title": "Reserv"}, {"id": "jeojyqqj", "items": [{"id": "i15-1", "text": "MacBook Pro"}, {"id": "i15-2", "text": "Laddare"}, {"id": "i15-3", "text": "Mus"}, {"id": "i15-4", "text": "Hub: Ethernet, kortläsare"}, {"id": "2z722dii", "text": "Ethernetkabel"}, {"id": "uuujh359", "text": "Telefon för att låsa upp SIM"}, {"id": "nac8s7e7", "text": "Router SIMkort"}], "title": "Reseredigering"}, {"id": "83vma1gs", "items": [{"id": "i81vqz8r", "text": "Live-U"}, {"id": "i16-1", "text": "Sändare, återgång"}, {"id": "i16-2", "text": "Mottagare, återgång"}, {"id": "i16-3", "text": "Snäcka"}, {"id": "i16-4", "text": "BNC-kabel"}, {"id": "i16-5", "text": "Laddare"}, {"id": "i16-6", "text": "D-tap-laddare"}, {"id": "qlet62qr", "text": "3.5 split"}, {"id": "l7bbo9rp", "text": "Hörlurar "}], "title": "Live-U"}, {"id": "zk3p6092", "items": [{"id": "juf8ghmz", "text": "Skyddsväst"}, {"id": "inya4tcv", "text": "Hjälm"}, {"id": "agqbr6xx", "text": "Första hjälpen"}, {"id": "dp707ngg", "text": "Gasmask"}], "title": "Säkerhet"}], "title": "Reportage"}};
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  var store = null;
+  try { store = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  if (!store || !store.lists) store = { lists: {}, ticks: null };
+  if (!Object.keys(store.lists).length && !store.seeded) { store.lists = clone(SEED); store.seeded = true; }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  function snapshotOf() {
+    var ids = Object.keys(store.lists);
+    return { empty: !ids.length, metadata: { fromCache: false }, docs: ids.map(function (id) { return { id: id, data: function () { return clone(store.lists[id]); } }; }) };
+  }
+  var db = {
+    collection: function () { return { onSnapshot: function (ok) { setTimeout(function () { ok(snapshotOf()); }, 0); } }; },
+    doc: function (path) {
+      var isTicks = /\/ticks$/.test(path), id = path.split("/")[1];
+      return {
+        set: function (body) { if (isTicks) store.ticks = clone(body); else store.lists[id] = clone(body); persist(); return Promise.resolve(); },
+        delete: function () { delete store.lists[id]; persist(); return Promise.resolve(); },
+        onSnapshot: function (ok) { setTimeout(function () { ok({ exists: !!store.ticks, data: function () { return clone(store.ticks || {}); } }); }, 0); }
+      };
+    }
+  };
+  var user = { canEdit: function () { return Promise.resolve(true); }, id: function () { return Promise.resolve("lokal"); } };
+  window.claude = { use: function (name) { return Promise.resolve(name === "db" ? db : user); } };
+})();
+</script>
+<script>
+(function () {
+  var lists = {}, ticks = {}, currentId = null;
+  var loaded = false, editing = false, onlyLeft = false, canEdit = false;
+  var db = null, ticksRef = null, ticksLocalOnly = false;
+  var dirtyLists = {}, ticksDirty = false, writing = false, failed = false, saveTimer = null;
+  var toastTimer = null, undoFn = null, closed = {};
+  var undoStack = [], baseline = {}, lastTouch = {}, selected = {};
+
+  function readLocal(key) { try { return JSON.parse(localStorage.getItem("reportage:" + key) || "{}") || {}; } catch (e) { return {}; } }
+  function writeLocal(key, value) { try { localStorage.setItem("reportage:" + key, JSON.stringify(value)); } catch (e) {} }
+  closed = readLocal("closed");
+  ticks = readLocal("ticks");
+
+  var $ = function (id) { return document.getElementById(id); };
+  var listEl = $("list");
+
+  function el(tag, props, kids) {
+    var n = document.createElement(tag);
+    Object.keys(props || {}).forEach(function (k) {
+      if (k === "on") Object.keys(props.on).forEach(function (t) { n.addEventListener(t, props.on[t]); });
+      else if (k in n) n[k] = props[k];
+      else n.setAttribute(k, props[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function newId() { return Math.random().toString(36).slice(2, 10); }
+  function current() { return lists[currentId] || null; }
+  function ordered() {
+    return Object.keys(lists).map(function (id) { return lists[id]; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+  }
+  function move(arr, i, by) { var x = arr.splice(i, 1)[0]; arr.splice(i + by, 0, x); }
+  function isDone(item) { return !!(ticks[currentId] && ticks[currentId][item.id]); }
+
+  function setStatus(text, bad) {
+    var s = $("status");
+    s.textContent = text || "";
+    s.hidden = !text;
+    s.className = bad ? "bad" : "";
+    if (bad) s.appendChild(el("button", { id: "retry", type: "button", textContent: "Spara igen", on: { click: function () { failed = false; queueSave(0); } } }));
+  }
+
+  function queueSave(delay) {
+    failed = false;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, delay);
+  }
+  function attempt(fn, again) {
+    return fn().catch(function (e) {
+      if (e && e.code === "unavailable" && again) {
+        return new Promise(function (r) { setTimeout(r, 800 + Math.random() * 800); }).then(function () { return attempt(fn, false); });
+      }
+      throw e;
+    });
+  }
+  // En skrivning i taget. Listor och bockar är separata dokument.
+  function flush() {
+    if (writing || failed || !db) return;
+    var id = Object.keys(dirtyLists)[0];
+    var job = null, undoMark = null;
+    if (id) {
+      delete dirtyLists[id];
+      undoMark = function () { dirtyLists[id] = true; };
+      var body = lists[id] ? clone(lists[id]) : null;
+      var target = db.doc("lists/" + id);
+      job = function () { return body ? target.set(body) : target.delete(); };
+    } else if (ticksDirty && ticksRef && !ticksLocalOnly) {
+      ticksDirty = false;
+      undoMark = function () { ticksDirty = true; };
+      var t = clone(ticks);
+      job = function () { return ticksRef.set(t); };
+    }
+    if (!job) return;
+    writing = true;
+    attempt(job, true).then(function () {
+      setStatus("");
+    }).catch(function (e) {
+      // Den som bara har läsbehörighet får behålla sina bockar i den här webbläsaren.
+      if (e && e.code === "invalid_argument" && !id) { ticksLocalOnly = true; return; }
+      undoMark(); failed = true;
+      setStatus("Ändringen är inte sparad. Kontrollera nätet.", true);
+    }).then(function () {
+      writing = false;
+      if (!failed) flush();
+    });
+  }
+  function saveTicks() { writeLocal("ticks", ticks); ticksDirty = true; queueSave(0); }
+  function sameAsNow(e) { return !lists[e.id] || JSON.stringify(e.data) === JSON.stringify(lists[e.id]); }
+  function syncBaseline() { Object.keys(lists).forEach(function (id) { baseline[id] = JSON.stringify(lists[id]); }); }
+  // Ångra-historiken sparar listans tillstånd före varje ändring. Många små ändringar i följd räknas som en.
+  function saveList(delay) {
+    var id = currentId, now = Date.now();
+    if (lists[id]) {
+      var cur = JSON.stringify(lists[id]);
+      if (baseline[id] !== undefined && baseline[id] !== cur && now - (lastTouch[id] || 0) > 2000) {
+        undoStack.push({ id: id, data: JSON.parse(baseline[id]) });
+        if (undoStack.length > 50) undoStack.shift();
+      }
+      baseline[id] = cur; lastTouch[id] = now;
+    }
+    dirtyLists[id] = true; queueSave(delay || 0);
+  }
+
+  function offerUndo(text, fn) {
+    undoFn = fn;
+    $("toastText").textContent = text;
+    $("toast").hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { $("toast").hidden = true; undoFn = null; }, 8000);
+  }
+  function rememberList(text) {
+    var id = currentId, before = clone(lists[id]);
+    offerUndo(text, function () { lists[id] = before; currentId = id; dirtyLists[id] = true; render(); queueSave(0); });
+  }
+
+  function removeItem(s, it) {
+    rememberList("Punkten är borttagen.");
+    s.items.splice(s.items.indexOf(it), 1);
+    if (ticks[currentId]) delete ticks[currentId][it.id];
+    render(); saveList(0);
+  }
+  function addItem(s, input) {
+    var text = input.value.trim();
+    if (!text) return;
+    s.items.push({ id: newId(), text: text });
+    render(); saveList(0);
+    var f = $("n-" + s.id);
+    if (f) f.focus({ preventScroll: true });
+  }
+  function fit(t) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+  function editChange() { render(); saveList(); }
+
+  function viewSection(s) {
+    var items = onlyLeft ? s.items.filter(function (i) { return !isDone(i); }) : s.items;
+    if (onlyLeft && !items.length) return null;
+    var left = s.items.filter(function (i) { return !isDone(i); }).length;
+    var key = currentId + ":" + s.id;
+    var isClosed = !!closed[key];
+    var head = el("button", {
+      className: "head", type: "button", ariaExpanded: String(!isClosed), id: "h-" + s.id,
+      on: { click: function () { closed[key] = !isClosed; writeLocal("closed", closed); render(); } }
+    }, [
+      el("span", { className: "chev" }),
+      el("span", { className: "name", textContent: s.title }),
+      el("span", { className: "sub", textContent: left ? left + " kvar" : (s.items.length ? "Klart" : "Tomt") })
+    ]);
+    var ul = isClosed ? null : el("ul", {}, items.map(function (it) {
+      var done = isDone(it);
+      return el("li", {}, [el("label", { className: "item" + (done ? " done" : "") }, [
+        el("input", { type: "checkbox", id: "c-" + it.id, checked: done, on: { change: function (e) {
+          var t = ticks[currentId] || (ticks[currentId] = {});
+          if (e.target.checked) t[it.id] = true; else delete t[it.id];
+          render(); saveTicks();
+        } } }),
+        el("span", { textContent: it.text })
+      ]), canEdit ? el("button", { className: "x", type: "button", textContent: "×", "aria-label": "Ta bort punkten " + it.text, on: { click: function () { removeItem(s, it); } } }) : null]);
+    }));
+    var adder = (canEdit && !isClosed && !onlyLeft) ? el("form", { className: "addrow", on: { submit: function (e) { e.preventDefault(); addItem(s, $("n-" + s.id)); } } }, [
+      el("input", { type: "text", id: "n-" + s.id, placeholder: "Ny punkt", autocomplete: "off", "aria-label": "Ny punkt i " + s.title }),
+      el("button", { type: "submit", textContent: "Lägg till" })
+    ]) : null;
+    return el("section", { className: isClosed ? "closed" : "" }, [el("h2", {}, [head]), ul, adder]);
+  }
+
+  function field(obj, key, id, label, after) {
+    return el("textarea", {
+      id: id, rows: 1, value: obj[key] || "", "aria-label": label,
+      on: { input: function (e) { obj[key] = e.target.value; fit(e.target); if (after) after(); saveList(700); } }
+    });
+  }
+  function icon(glyph, label, cls, disabled, fn) {
+    return el("button", { className: "icon" + (cls ? " " + cls : ""), type: "button", textContent: glyph, disabled: disabled, "aria-label": label, on: { click: fn } });
+  }
+
+  function editSection(list, s, si) {
+    var kids = [el("div", { className: "edit-title" }, [
+      field(s, "title", "t-" + s.id, "Rubrik"),
+      icon("↑", "Flytta avsnittet upp", "", si === 0, function () { move(list.sections, si, -1); editChange(); }),
+      icon("↓", "Flytta avsnittet ner", "", si === list.sections.length - 1, function () { move(list.sections, si, 1); editChange(); }),
+      icon("×", "Ta bort avsnittet " + s.title, "del", false, function () {
+        rememberList("Avsnittet är borttaget.");
+        list.sections.splice(si, 1); editChange();
+      })
+    ])];
+    s.items.forEach(function (it, i) {
+      kids.push(el("div", { className: "edit-item" + (selected[it.id] ? " selected" : ""), "data-ii": i }, [
+        el("input", { type: "checkbox", className: "sel", id: "sel-" + it.id, checked: !!selected[it.id], "aria-label": "Markera " + it.text, on: { change: function (e) {
+          if (e.target.checked) selected[it.id] = true; else delete selected[it.id];
+          e.target.closest(".edit-item").classList.toggle("selected", e.target.checked);
+          updateBar();
+        } } }),
+        el("button", { className: "icon grip", type: "button", textContent: "≡", "aria-label": "Dra punkten " + it.text, title: "Dra för att flytta", on: { pointerdown: function (e) { startDrag(e, si, i, it); } } }),
+        field(it, "text", "e-" + it.id, "Punkt"),
+        icon("↑", "Flytta punkten upp", "", i === 0, function () { move(s.items, i, -1); editChange(); }),
+        icon("↓", "Flytta punkten ner", "", i === s.items.length - 1, function () { move(s.items, i, 1); editChange(); }),
+        icon("×", "Ta bort punkten", "del", false, function () {
+          rememberList("Punkten är borttagen.");
+          s.items.splice(i, 1); editChange();
+        })
+      ]));
+    });
+    kids.push(el("button", { className: "add", type: "button", textContent: "+ Lägg till punkt", on: { click: function () {
+      var it = { id: newId(), text: "" };
+      s.items.push(it); render();
+      $("e-" + it.id).focus();
+    } } }));
+    return el("section", { "data-si": si }, kids);
+  }
+
+  // Dra och släpp av punkter, mellan avsnitt i samma lista. Pekarhändelser, så det fungerar med både mus och touch.
+  var drag = null;
+  function locate(y) {
+    var secs = [].slice.call(listEl.querySelectorAll("section[data-si]"));
+    if (!secs.length) return null;
+    var sec = secs[secs.length - 1];
+    for (var k = 0; k < secs.length; k++) { if (y <= secs[k].getBoundingClientRect().bottom) { sec = secs[k]; break; } }
+    var rows = [].slice.call(sec.querySelectorAll(".edit-item")).filter(function (r) { return drag.rows.indexOf(r) < 0; });
+    var idx = rows.filter(function (r) { var b = r.getBoundingClientRect(); return b.top + b.height / 2 < y; }).length;
+    var sr = sec.getBoundingClientRect(), at;
+    if (!rows.length) at = sec.querySelector(".edit-title").getBoundingClientRect().bottom;
+    else if (idx < rows.length) at = rows[idx].getBoundingClientRect().top;
+    else at = rows[rows.length - 1].getBoundingClientRect().bottom;
+    return { si: +sec.getAttribute("data-si"), idx: idx, top: at, left: sr.left, width: sr.width };
+  }
+  function dragUpdate() {
+    if (!drag) return;
+    drag.ghost.style.top = (drag.y - 22) + "px";
+    var t = locate(drag.y);
+    drag.target = t;
+    if (t) { drag.line.style.top = (t.top - 1) + "px"; drag.line.style.left = t.left + "px"; drag.line.style.width = t.width + "px"; }
+  }
+  function dragTick() {
+    if (!drag) return;
+    var top = document.querySelector("header").getBoundingClientRect().bottom + 50;
+    if (drag.y < top) window.scrollBy(0, -14);
+    else if (drag.y > window.innerHeight - 90) window.scrollBy(0, 14);
+    dragUpdate();
+    requestAnimationFrame(dragTick);
+  }
+  function startDrag(e, si, ii, it) {
+    if (drag || (e.button && e.button > 0)) return;
+    e.preventDefault();
+    var grip = e.currentTarget, row = grip.closest(".edit-item"), r = row.getBoundingClientRect();
+    var multi = !!selected[it.id] && selectedCount() > 1;
+    var marked = multi ? [].slice.call(listEl.querySelectorAll(".edit-item")).filter(function (x) { return x.querySelector(".sel").checked; }) : [row];
+    var ghost = el("div", { className: "ghost", textContent: multi ? marked.length + " punkter" : (it.text || "(tom punkt)") });
+    ghost.style.left = r.left + "px"; ghost.style.width = r.width + "px";
+    var line = el("div", { className: "dropline" });
+    document.body.appendChild(ghost); document.body.appendChild(line);
+    marked.forEach(function (x) { x.classList.add("dragging"); });
+    drag = { si: si, ii: ii, row: row, rows: marked, multi: multi, ghost: ghost, line: line, y: e.clientY, target: null };
+    try { grip.setPointerCapture(e.pointerId); } catch (x) {}
+    function move(ev) { if (drag) { drag.y = ev.clientY; dragUpdate(); } }
+    function end(ev) {
+      grip.removeEventListener("pointermove", move);
+      grip.removeEventListener("pointerup", end);
+      grip.removeEventListener("pointercancel", end);
+      var d = drag; drag = null;
+      d.ghost.remove(); d.line.remove(); d.rows.forEach(function (x) { x.classList.remove("dragging"); });
+      var list = current(), t = d.target;
+      if (!list || !t || ev.type === "pointercancel") return;
+      if (d.multi) {
+        var moved = [];
+        list.sections.forEach(function (s) { s.items = s.items.filter(function (x) { if (selected[x.id]) { moved.push(x); return false; } return true; }); });
+        var dest = list.sections[t.si].items;
+        dest.splice.apply(dest, [t.idx, 0].concat(moved));
+        selected = {};
+        editChange();
+        return;
+      }
+      if (t.si === d.si && t.idx === d.ii) return;
+      var item = list.sections[d.si].items.splice(d.ii, 1)[0];
+      list.sections[t.si].items.splice(t.idx, 0, item);
+      editChange();
+    }
+    grip.addEventListener("pointermove", move);
+    grip.addEventListener("pointerup", end);
+    grip.addEventListener("pointercancel", end);
+    dragUpdate();
+    requestAnimationFrame(dragTick);
+  }
+
+  function selectedCount() {
+    var l = current(), n = 0;
+    if (!l) return 0;
+    l.sections.forEach(function (s) { s.items.forEach(function (i) { if (selected[i.id]) n++; }); });
+    return n;
+  }
+  function updateBar() {
+    var n = editing ? selectedCount() : 0;
+    $("selbar").hidden = n === 0;
+    $("selText").textContent = n === 1 ? "1 markerad" : n + " markerade";
+  }
+  function closePanel() { $("movePanel").hidden = true; }
+  function fillSections() {
+    var l = lists[$("moveList").value], sel = $("moveSec");
+    sel.textContent = "";
+    if (!l) return;
+    l.sections.forEach(function (s) { sel.appendChild(el("option", { value: s.id, textContent: s.title || "Namnlöst avsnitt" })); });
+  }
+  function openPanel() {
+    var n = selectedCount();
+    if (!n) return;
+    $("moveTitle").textContent = "Flytta " + (n === 1 ? "1 punkt" : n + " punkter");
+    var pl = $("moveList");
+    pl.textContent = "";
+    ordered().forEach(function (l) { pl.appendChild(el("option", { value: l.id, textContent: l.title || "Namnlös lista" })); });
+    pl.value = currentId;
+    fillSections();
+    var first = current().sections.filter(function (s) { return s.items.some(function (i) { return selected[i.id]; }); })[0];
+    if (first) $("moveSec").value = first.id;
+    $("movePanel").hidden = false;
+  }
+  function doMove() {
+    var srcId = currentId, dstId = $("moveList").value, secId = $("moveSec").value;
+    var src = lists[srcId], dst = lists[dstId];
+    if (!src || !dst) return;
+    var dsec = dst.sections.filter(function (s) { return s.id === secId; })[0];
+    if (!dsec) return;
+    var beforeSrc = clone(src), beforeDst = dstId !== srcId ? clone(dst) : null;
+    var moved = [];
+    src.sections.forEach(function (s) { s.items = s.items.filter(function (it) { if (selected[it.id]) { moved.push(it); return false; } return true; }); });
+    if (!moved.length) { closePanel(); return; }
+    if (dstId !== srcId) moved = moved.map(function (it) { return { id: newId(), text: it.text }; });
+    dsec.items.push.apply(dsec.items, moved);
+    undoStack.push({ id: srcId, data: beforeSrc, also: beforeDst ? [{ id: dstId, data: beforeDst }] : [] });
+    baseline[srcId] = JSON.stringify(src); lastTouch[srcId] = 0;
+    dirtyLists[srcId] = true;
+    if (beforeDst) { baseline[dstId] = JSON.stringify(dst); lastTouch[dstId] = 0; dirtyLists[dstId] = true; }
+    queueSave(0);
+    selected = {};
+    closePanel();
+    render();
+  }
+
+  function renderPicker() {
+    var p = $("picker");
+    p.textContent = "";
+    ordered().forEach(function (l) { p.appendChild(el("option", { value: l.id, textContent: l.title || "Namnlös lista" })); });
+    p.value = currentId || "";
+    p.disabled = editing || !currentId;
+  }
+
+  function render() {
+    var focusId = document.activeElement && document.activeElement.id;
+    var list = current();
+    renderPicker();
+    var all = list ? list.sections.reduce(function (a, s) { return a.concat(s.items); }, []) : [];
+    var done = all.filter(isDone).length;
+    $("count").textContent = list ? done + " av " + all.length : "";
+    $("fill").style.width = all.length ? (done / all.length * 100) + "%" : "0";
+    $("editBtn").hidden = !canEdit || !loaded;
+    $("editBtn").textContent = editing ? "Klar" : "Redigera";
+    $("editBtn").classList.toggle("primary", editing);
+    $("undoBtn").hidden = !canEdit || !loaded || !undoStack.length;
+    updateBar();
+    $("filterBtn").hidden = editing || !list;
+    $("filterBtn").setAttribute("aria-pressed", String(onlyLeft));
+    $("resetBtn").hidden = editing || !done;
+    $("copyBtn").hidden = !editing;
+    $("deleteBtn").hidden = !editing || ordered().length < 2;
+
+    listEl.textContent = "";
+    if (!loaded) { listEl.appendChild(el("p", { className: "note", textContent: "Hämtar listorna…" })); return; }
+    if (!list) {
+      listEl.appendChild(el("p", { className: "note", textContent: canEdit ? "Det finns inga listor ännu. Tryck på Redigera för att skapa den första." : "Det finns inga listor ännu." }));
+      return;
+    }
+    if (editing) {
+      listEl.appendChild(el("div", { className: "edit-list" }, [
+        el("label", { htmlFor: "listTitle", textContent: "Listans namn" }),
+        field(list, "title", "listTitle", "Listans namn", renderPicker),
+        el("label", { htmlFor: "listBlurb", textContent: "Kort beskrivning" }),
+        field(list, "blurb", "listBlurb", "Kort beskrivning")
+      ]));
+      list.sections.forEach(function (s, i) { listEl.appendChild(editSection(list, s, i)); });
+      listEl.appendChild(el("button", { className: "add", id: "addSection", type: "button", textContent: "+ Lägg till avsnitt", on: { click: function () {
+        var s = { id: newId(), title: "", items: [] };
+        list.sections.push(s); render();
+        $("t-" + s.id).focus();
+      } } }));
+      listEl.querySelectorAll("textarea").forEach(fit);
+    } else {
+      if (list.blurb) listEl.appendChild(el("p", { className: "blurb", textContent: list.blurb }));
+      var views = list.sections.map(viewSection).filter(Boolean);
+      views.forEach(function (v) { listEl.appendChild(v); });
+      if (!views.length) {
+        listEl.appendChild(el("p", { className: "note", textContent: onlyLeft && all.length ? "Allt är avbockat." : "Listan är tom." }));
+      }
+    }
+    if (focusId && $(focusId) && focusId !== "picker") $(focusId).focus({ preventScroll: true });
+  }
+
+  // Tomma rader rensas först när redigeringen avslutas, så att de går att fylla i under tiden.
+  function prune(list) {
+    list.sections.forEach(function (s) { s.items = s.items.filter(function (i) { return i.text.trim(); }); });
+    list.sections = list.sections.filter(function (s) { return s.title.trim() || s.items.length; });
+    if (!list.title || !list.title.trim()) list.title = "Namnlös lista";
+  }
+  function createList(from) {
+    var max = ordered().reduce(function (m, l) { return Math.max(m, l.order || 0); }, 0);
+    var id = "l" + newId();
+    lists[id] = {
+      id: id, order: max + 1,
+      title: from ? from.title + " (kopia)" : "Ny lista",
+      blurb: from ? from.blurb || "" : "",
+      sections: from ? clone(from.sections) : []
+    };
+    currentId = id;
+    dirtyLists[id] = true;
+    queueSave(0);
+  }
+
+  $("picker").addEventListener("change", function (e) { currentId = e.target.value; onlyLeft = false; render(); window.scrollTo(0, 0); });
+  $("editBtn").addEventListener("click", function () {
+    if (!loaded) return;
+    selected = {}; closePanel();
+    if (!current()) { createList(null); editing = true; render(); return; }
+    editing = !editing;
+    if (!editing) { prune(current()); saveList(); }
+    render();
+    window.scrollTo(0, 0);
+  });
+  $("copyBtn").addEventListener("click", function () {
+    prune(current()); saveList();
+    createList(current());
+    render();
+    window.scrollTo(0, 0);
+    $("listTitle").focus();
+  });
+  $("deleteBtn").addEventListener("click", function () {
+    var id = currentId, before = clone(lists[id]);
+    delete lists[id];
+    dirtyLists[id] = true;
+    currentId = ordered()[0].id;
+    editing = false;
+    offerUndo("Listan är borttagen.", function () { lists[id] = before; currentId = id; dirtyLists[id] = true; render(); queueSave(0); });
+    render(); queueSave(0);
+  });
+  $("filterBtn").addEventListener("click", function () { onlyLeft = !onlyLeft; render(); });
+  $("resetBtn").addEventListener("click", function () {
+    var id = currentId, before = clone(ticks[id] || {});
+    offerUndo("Alla punkter är urbockade.", function () { ticks[id] = before; render(); saveTicks(); });
+    ticks[id] = {};
+    onlyLeft = false;
+    render(); saveTicks();
+  });
+  $("undo").addEventListener("click", function () {
+    if (undoFn) { undoFn(); undoFn = null; syncBaseline(); while (undoStack.length && sameAsNow(undoStack[undoStack.length - 1])) undoStack.pop(); render(); }
+    $("toast").hidden = true;
+  });
+  $("moveBtn").addEventListener("click", openPanel);
+  $("moveCancel").addEventListener("click", closePanel);
+  $("moveGo").addEventListener("click", doMove);
+  $("moveList").addEventListener("change", fillSections);
+  $("clearSel").addEventListener("click", function () { selected = {}; closePanel(); render(); });
+  $("undoBtn").addEventListener("click", function () {
+    var e = null;
+    while (undoStack.length) {
+      var c = undoStack.pop();
+      if (!sameAsNow(c)) { e = c; break; }
+    }
+    if (!e) { render(); return; }
+    lists[e.id] = e.data; currentId = e.id;
+    baseline[e.id] = JSON.stringify(e.data); lastTouch[e.id] = 0;
+    dirtyLists[e.id] = true;
+    (e.also || []).forEach(function (x) { lists[x.id] = x.data; baseline[x.id] = JSON.stringify(x.data); lastTouch[x.id] = 0; dirtyLists[x.id] = true; });
+    selected = {};
+    queueSave(0);
+    $("toast").hidden = true; undoFn = null;
+    render();
+  });
+  window.addEventListener("pagehide", function () { clearTimeout(saveTimer); flush(); });
+  window.addEventListener("hashchange", function () {
+    var id = location.hash.slice(1);
+    if (lists[id] && !editing) { currentId = id; onlyLeft = false; render(); window.scrollTo(0, 0); }
+  });
+
+  function message(text) { listEl.textContent = ""; listEl.appendChild(el("p", { className: "note", textContent: text })); }
+  function busy() { return writing || ticksDirty || Object.keys(dirtyLists).length > 0; }
+
+  function start(database, user) {
+    db = database;
+    var timer = setTimeout(function () {
+      if (!loaded) message("Listorna går inte att nå just nu. Kontrollera nätet.");
+      else setStatus("Du ser en sparad kopia som kan vara inaktuell.");
+    }, 10000);
+
+    db.collection("lists").onSnapshot(function (snap) {
+      if (!snap.metadata.fromCache) { clearTimeout(timer); if (!failed) setStatus(""); }
+      if (snap.empty && snap.metadata.fromCache) return;
+      if (busy()) return;
+      if (editing && loaded) return;
+      var next = {};
+      snap.docs.forEach(function (d) {
+        var body = clone(d.data());
+        body.id = d.id;
+        if (!body.sections) body.sections = [];
+        next[d.id] = body;
+      });
+      if (loaded && JSON.stringify(next) === JSON.stringify(lists)) return;
+      lists = next;
+      syncBaseline();
+      var wanted = location.hash.slice(1);
+      if (!loaded && lists[wanted]) currentId = wanted;
+      if (!lists[currentId]) currentId = ordered().length ? ordered()[0].id : null;
+      loaded = true;
+      render();
+    }, function () {
+      clearTimeout(timer);
+      if (!loaded) message("Listorna kunde inte öppnas. Ladda om sidan.");
+      else setStatus("Kontakten med listorna bröts. Ladda om sidan innan du ändrar något mer.");
+    });
+
+    if (!user) return;
+    user.canEdit().then(function (yes) { canEdit = yes; render(); });
+    user.id().then(function (uid) {
+      if (!uid) return;
+      ticksRef = db.doc("data/users/" + uid + "/ticks");
+      ticksRef.onSnapshot(function (snap) {
+        if (ticksDirty || writing || !snap.exists) return;
+        var body = clone(snap.data());
+        if (JSON.stringify(body) === JSON.stringify(ticks)) return;
+        ticks = body;
+        writeLocal("ticks", ticks);
+        render();
+      }, function () { ticksLocalOnly = true; });
+    });
+  }
+
+  if (!window.claude || !claude.use) { message("Listorna går bara att öppna på sin länk i Claude."); return; }
+  Promise.all([claude.use("db"), claude.use("user")]).then(function (r) {
+    if (!r[0]) { message("Listorna kunde inte öppnas. Logga in på claude.ai och ladda om sidan."); return; }
+    start(r[0], r[1]);
+  });
+})();
+</script>
+
+</body></html>
