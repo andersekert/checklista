@@ -129,7 +129,6 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
     <div class="tools">
       <button class="tool primary" id="newJob" type="button" hidden>Nytt jobb</button>
       <button class="tool" id="undoBtn" type="button" hidden>Ångra</button>
-      <button class="tool" id="filterBtn" type="button" aria-pressed="false">Bara kvar</button>
       <button class="tool" id="resetBtn" type="button">Bocka ur alla</button>
       <button class="tool" id="editBtn" type="button" hidden>Redigera</button>
       <button class="tool" id="copyBtn" type="button" hidden>Kopiera till ny lista</button>
@@ -674,8 +673,6 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
     $("editBtn").classList.toggle("primary", editing);
     $("undoBtn").hidden = !canEdit || !loaded || !undoStack.length;
     updateBar();
-    $("filterBtn").hidden = editing || !list;
-    $("filterBtn").setAttribute("aria-pressed", String(onlyLeft));
     $("resetBtn").hidden = editing || !done;
     $("copyBtn").hidden = !editing;
     $("deleteBtn").hidden = !editing || ordered().length < 2 || currentId === "rep";
@@ -768,7 +765,6 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
     offerUndo("Listan är borttagen.", function () { lists[id] = before; currentId = id; dirtyLists[id] = true; render(); queueSave(0); });
     render(); queueSave(0);
   });
-  $("filterBtn").addEventListener("click", function () { onlyLeft = !onlyLeft; render(); });
   $("resetBtn").addEventListener("click", function () {
     var id = currentId, before = clone(ticks[id] || {});
     offerUndo("Alla punkter är urbockade.", function () { ticks[id] = before; render(); saveTicks(); });
