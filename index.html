@@ -104,6 +104,9 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
 #toast { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding-top: 10px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); }
 #toast .inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 #undo { min-height: 2.75rem; background: none; border: 1px solid currentColor; padding: 0 1rem; color: inherit; font-weight: 700; }
+.login label { display: block; margin-top: 14px; font-size: 0.875rem; font-weight: 700; }
+.login input { display: block; width: 100%; max-width: 24rem; min-height: 2.75rem; margin-top: 4px; padding: 0 10px; background: var(--paper); border: 1px solid var(--ink); border-radius: 0; font: inherit; font-size: 1rem; color: var(--ink); }
+.login .tool { display: block; margin-top: 14px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -116,12 +119,14 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
       <div id="count" aria-live="polite"></div>
     </div>
     <div class="tools">
+      <button class="tool primary" id="newJob" type="button" hidden>Nytt jobb</button>
       <button class="tool" id="undoBtn" type="button" hidden>Ångra</button>
       <button class="tool" id="filterBtn" type="button" aria-pressed="false">Bara kvar</button>
       <button class="tool" id="resetBtn" type="button">Bocka ur alla</button>
       <button class="tool" id="editBtn" type="button" hidden>Redigera</button>
       <button class="tool" id="copyBtn" type="button" hidden>Kopiera till ny lista</button>
       <button class="tool del" id="deleteBtn" type="button" hidden>Ta bort listan</button>
+      <button class="tool" id="logoutBtn" type="button" hidden>Logga ut</button>
     </div>
     <p id="status" hidden></p>
   </div>
@@ -146,35 +151,122 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
   <div class="inner"><span id="toastText"></span><button id="undo" type="button">Ångra</button></div>
 </div>
 
+<script src="supabase.js"></script>
 <script>
-// Lagring i webbläsaren på den här enheten. Ersätter databasen som sidan använder i Claude.
+// Synk via Supabase. Ger sidan samma databas-gränssnitt som den hade i Claude.
 (function () {
-  if (window.claude && window.claude.use) return;
-  var KEY = "checklista:db";
+  var URL_ = "https://vlzkwvhxajzwlruwgqjk.supabase.co", KEY_ = "sb_publishable_lR5uHkxuHF0uN_oKTd2vdQ_fDm-RYhr";
   var SEED = {"rep": {"blurb": "Lägg till och ta bort punkter direkt i listan.", "id": "rep", "order": 1, "sections": [{"id": "s1", "items": [{"id": "i1-7", "text": "Lokala regler för fotografering, drönare och inspelning kontrollerade"}, {"id": "i21-1", "text": "Biljetter, boende och lokala transporter bokade och sparade offline"}, {"id": "i21-2", "text": "Kontanter i lokal valuta samt två betalkort"}, {"id": "i21-3", "text": "Kopior av pass och försäkring, separat från originalen och digitala"}, {"id": "i2-1", "text": "Pass, visum och eventuellt pressackreditering eller journalistvisum"}, {"id": "i2-2", "text": "Presslegitimation och uppdragsbrev från redaktionen"}, {"id": "i21-4", "text": "Kläder anpassade efter väder och lokala normer och formella möten"}, {"id": "i2-4", "text": "UD:s reseinformation läst och riskbedömning gjord"}, {"id": "i21-7", "text": "Mediciner"}, {"id": "i2-5", "text": "Vaccinationer, mediciner och reseapotek"}, {"id": "i2-7", "text": "Ambassadens nummer och registrering hos UD:s Svensklistan"}, {"id": "zvcovabf", "text": "Utrustningslista med serienummer och eventuell ATA-carnet"}, {"id": "i3-1", "text": "Rensad telefon och dator vid resa till känsliga länder"}], "title": "Innan resan: research och upplägg"}, {"id": "gy4p70ld", "items": [{"id": "i10-1", "text": "Kamera FX6"}, {"id": "i10-4", "text": "Optik 24-105"}, {"id": "i10-5", "text": "Optik 70-200"}, {"id": "i9-1", "text": "Kamerastativ"}, {"id": "i9-3", "text": "Platta"}, {"id": "i9-2", "text": "Stativfötter"}, {"id": "i10-8", "text": "4 st batteri 99 Wh"}, {"id": "i10-9", "text": "2 st batteri 150 Wh"}, {"id": "i10-11", "text": "Minneskort"}, {"id": "i10-12", "text": "Regnskydd"}, {"id": "i14-1", "text": "Batteriladdare"}], "title": "Kamera-1"}, {"id": "zec4hzh1", "items": [{"id": "i10-6", "text": "2 st ljudmottagare"}, {"id": "i10-7", "text": "2 st sladdar ljudmottagare till kamera"}, {"id": "i10-10", "text": "Hörlurar"}, {"id": "i11-5", "text": "20 st AA-batterier"}, {"id": "i11-1", "text": "2 st sändare"}, {"id": "i11-2", "text": "3 st myggor"}, {"id": "i11-3", "text": "Vindskydd, dolda klisterlappar"}, {"id": "i11-4", "text": "Handmic trådlös"}, {"id": "i11-6", "text": "Handmic XLR"}, {"id": "i11-7", "text": "XLR-kabel"}], "title": "Ljud"}, {"id": "k33fmivj", "items": [{"id": "i18-1", "text": "Lampa"}, {"id": "i18-2", "text": "Lampstativ"}, {"id": "i18-3", "text": "Softbox"}, {"id": "i10-2", "text": "Kameralampa"}], "title": "Ljus"}, {"id": "s5gosut5", "items": [{"id": "i12-1", "text": "Kamera 2"}, {"id": "i12-2", "text": "Optik 35"}, {"id": "i12-3", "text": "Sladd ljudmottagare till kamera"}, {"id": "i12-4", "text": "Batterier"}, {"id": "i12-5", "text": "Minneskort"}, {"id": "25s5zzxj", "text": "Laddare"}, {"id": "i17-1", "text": "Ljud kablage ev extra ljud"}], "title": "Kamera-2"}, {"id": "s9", "items": [{"id": "i13-1", "text": "GoPro"}, {"id": "i13-2", "text": "Minneskort"}, {"id": "i19-1", "text": "Groda"}, {"id": "i19-2", "text": "2 st Laddare USB-C"}, {"id": "bd6gdl1w", "text": "Pensel, kameravård"}, {"id": "5euis333", "text": "Airpods"}], "title": "Utrustning"}, {"id": "jbijm5xz", "items": [{"id": "i17-2", "text": "1 BNC"}, {"id": "i17-3", "text": "1 XLR"}, {"id": "i17-4", "text": "Hörlurar"}, {"id": "i19-3", "text": "Tejp"}, {"id": "6x5mi2rl", "text": "3.5 Split"}], "title": "Reserv"}, {"id": "jeojyqqj", "items": [{"id": "i15-1", "text": "MacBook Pro"}, {"id": "i15-2", "text": "Laddare"}, {"id": "i15-3", "text": "Mus"}, {"id": "i15-4", "text": "Hub: Ethernet, kortläsare"}, {"id": "2z722dii", "text": "Ethernetkabel"}, {"id": "uuujh359", "text": "Telefon för att låsa upp SIM"}, {"id": "nac8s7e7", "text": "Router SIMkort"}], "title": "Reseredigering"}, {"id": "83vma1gs", "items": [{"id": "i81vqz8r", "text": "Live-U"}, {"id": "i16-1", "text": "Sändare, återgång"}, {"id": "i16-2", "text": "Mottagare, återgång"}, {"id": "i16-3", "text": "Snäcka"}, {"id": "i16-4", "text": "BNC-kabel"}, {"id": "i16-5", "text": "Laddare"}, {"id": "i16-6", "text": "D-tap-laddare"}, {"id": "qlet62qr", "text": "3.5 split"}, {"id": "l7bbo9rp", "text": "Hörlurar "}], "title": "Live-U"}, {"id": "zk3p6092", "items": [{"id": "juf8ghmz", "text": "Skyddsväst"}, {"id": "inya4tcv", "text": "Hjälm"}, {"id": "agqbr6xx", "text": "Första hjälpen"}, {"id": "dp707ngg", "text": "Gasmask"}], "title": "Säkerhet"}], "title": "Reportage"}};
+  var sb = supabase.createClient(URL_, KEY_, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  var needsPassword = /type=(invite|recovery)/.test(location.hash);
+  var uid = null, rows = null, listeners = [];
   function clone(x) { return JSON.parse(JSON.stringify(x)); }
-  var store = null;
-  try { store = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-  if (!store || !store.lists) store = { lists: {}, ticks: null };
-  if (!Object.keys(store.lists).length && !store.seeded) { store.lists = clone(SEED); store.seeded = true; }
-  function persist() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
-  function snapshotOf() {
-    var ids = Object.keys(store.lists);
-    return { empty: !ids.length, metadata: { fromCache: false }, docs: ids.map(function (id) { return { id: id, data: function () { return clone(store.lists[id]); } }; }) };
+  function E(tag, props, kids) {
+    var n = document.createElement(tag);
+    Object.keys(props || {}).forEach(function (k) { n[k] = props[k]; });
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+  function box() { var l = document.getElementById("list"); l.textContent = ""; return l; }
+  function field(label, type, id, auto) {
+    return [E("label", { htmlFor: id, textContent: label }), E("input", { id: id, type: type, autocomplete: auto, required: true })];
+  }
+  function showLogin(msg) {
+    var l = box(), out = E("p", { className: "note", id: "loginMsg", textContent: msg || "" });
+    var f = E("form", { className: "login" }, [].concat(
+      field("E-post", "email", "lgEmail", "username"), field("Lösenord", "password", "lgPass", "current-password"),
+      [E("button", { className: "tool primary", type: "submit", textContent: "Logga in" }),
+       E("button", { className: "tool", type: "button", id: "lgForgot", textContent: "Första gången eller glömt lösenordet" }), out]));
+    f.addEventListener("submit", function (e) {
+      e.preventDefault(); out.textContent = "Loggar in…";
+      sb.auth.signInWithPassword({ email: $v("lgEmail"), password: $v("lgPass") }).then(function (r) {
+        if (r.error) out.textContent = "Fel e-post eller lösenord."; else go();
+      });
+    });
+    f.querySelector("#lgForgot").addEventListener("click", function () {
+      var em = $v("lgEmail"); if (!em) { out.textContent = "Skriv din e-post först."; return; }
+      out.textContent = "Skickar…";
+      sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname }).then(function (r) {
+        out.textContent = r.error ? "Det gick inte att skicka mejlet. Försök om en stund." : "Mejl skickat. Öppna länken i mejlet för att välja lösenord.";
+      });
+    });
+    l.appendChild(E("p", { className: "blurb", textContent: "Logga in för att se dina listor." })); l.appendChild(f);
+  }
+  function showSetPassword() {
+    var l = box(), out = E("p", { className: "note", textContent: "" });
+    var f = E("form", { className: "login" }, [].concat(field("Välj lösenord (minst 8 tecken)", "password", "npPass", "new-password"),
+      [E("button", { className: "tool primary", type: "submit", textContent: "Spara lösenord" }), out]));
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if ($v("npPass").length < 8) { out.textContent = "Minst 8 tecken."; return; }
+      sb.auth.updateUser({ password: $v("npPass") }).then(function (r) {
+        if (r.error) { out.textContent = "Det gick inte att spara. Öppna länken i mejlet igen."; return; }
+        needsPassword = false; history.replaceState(null, "", location.pathname); go();
+      });
+    });
+    l.appendChild(E("p", { className: "blurb", textContent: "Välj ett lösenord till listorna." })); l.appendChild(f);
+  }
+  function $v(id) { return document.getElementById(id).value.trim(); }
+
+  var gateResolve, gatePromise = new Promise(function (r) { gateResolve = r; });
+  function go() {
+    sb.auth.getSession().then(function (r) {
+      var s = r.data.session;
+      if (s && needsPassword) { showSetPassword(); return; }
+      if (s) { uid = s.user.id; gateResolve(s); return; }
+      showLogin();
+    });
+  }
+
+  function snapshotKind(kind) {
+    var list = (rows || []).filter(function (r) { return r.id.indexOf("list:") === 0; });
+    if (kind === "lists") return { empty: !list.length, metadata: { fromCache: false }, docs: list.map(function (r) { return { id: r.id.slice(5), data: function () { return clone(r.data); } }; }) };
+    var t = (rows || []).filter(function (r) { return r.id === "ticks:" + uid; })[0];
+    return { exists: !!t, data: function () { return clone(t ? t.data : {}); } };
+  }
+  function emit() { listeners.forEach(function (l) { l.ok(snapshotKind(l.kind)); }); }
+  function fail(e) { listeners.forEach(function (l) { if (l.err) l.err(e); }); }
+  function refresh() {
+    return sb.from("checklista").select("id,data").then(function (r) {
+      if (r.error) throw r.error;
+      rows = r.data;
+      if (!rows.some(function (x) { return x.id === "list:rep"; })) {
+        return sb.from("checklista").upsert({ id: "list:rep", data: SEED.rep }).then(function (w) {
+          if (w.error) throw w.error; rows.push({ id: "list:rep", data: SEED.rep });
+        });
+      }
+    }).then(emit, fail);
+  }
+  function write(id, body) {
+    return sb.from("checklista").upsert({ id: id, data: body, updated_at: new Date().toISOString() }).then(function (r) { if (r.error) throw r.error; });
   }
   var db = {
-    collection: function () { return { onSnapshot: function (ok) { setTimeout(function () { ok(snapshotOf()); }, 0); } }; },
+    collection: function () { return { onSnapshot: function (ok, err) { listeners.push({ kind: "lists", ok: ok, err: err }); if (rows) setTimeout(function () { ok(snapshotKind("lists")); }, 0); } }; },
     doc: function (path) {
-      var isTicks = /\/ticks$/.test(path), id = path.split("/")[1];
+      var isTicks = /\/ticks$/.test(path), id = isTicks ? "ticks:" + uid : "list:" + path.split("/")[1];
       return {
-        set: function (body) { if (isTicks) store.ticks = clone(body); else store.lists[id] = clone(body); persist(); return Promise.resolve(); },
-        delete: function () { delete store.lists[id]; persist(); return Promise.resolve(); },
-        onSnapshot: function (ok) { setTimeout(function () { ok({ exists: !!store.ticks, data: function () { return clone(store.ticks || {}); } }); }, 0); }
+        set: function (body) { return write(id, body); },
+        delete: function () { return sb.from("checklista").delete().eq("id", id).then(function (r) { if (r.error) throw r.error; }); },
+        onSnapshot: function (ok, err) { listeners.push({ kind: "ticks", ok: ok, err: err }); if (rows) setTimeout(function () { ok(snapshotKind("ticks")); }, 0); }
       };
     }
   };
-  var user = { canEdit: function () { return Promise.resolve(true); }, id: function () { return Promise.resolve("lokal"); } };
-  window.claude = { use: function (name) { return Promise.resolve(name === "db" ? db : user); } };
+  var user = { canEdit: function () { return Promise.resolve(true); }, id: function () { return Promise.resolve(uid); } };
+  var ready = null;
+  function init() {
+    if (ready) return ready;
+    ready = gatePromise.then(function () {
+      sb.channel("checklista").on("postgres_changes", { event: "*", schema: "public", table: "checklista" }, refresh).subscribe();
+      document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
+      window.addEventListener("online", refresh);
+      var lo = document.getElementById("logoutBtn"); lo.hidden = false;
+      lo.addEventListener("click", function () { sb.auth.signOut().then(function () { location.reload(); }); });
+      return refresh();
+    });
+    return ready;
+  }
+  window.claude = { use: function (name) { go_once(); return init().then(function () { return name === "db" ? db : user; }); } };
+  var started = false; function go_once() { if (!started) { started = true; go(); } }
 })();
 </script>
 <script>
@@ -517,8 +609,9 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
   function renderPicker() {
     var p = $("picker");
     p.textContent = "";
-    ordered().forEach(function (l) { p.appendChild(el("option", { value: l.id, textContent: l.title || "Namnlös lista" })); });
+    ordered().forEach(function (l) { p.appendChild(el("option", { value: l.id, textContent: (l.title || "Namnlös lista") + (l.id === "rep" ? " (mall)" : "") })); });
     p.value = currentId || "";
+    try { if (currentId) localStorage.setItem("checklista:senast", currentId); } catch (e) {}
     p.disabled = editing || !currentId;
   }
 
@@ -539,7 +632,8 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
     $("filterBtn").setAttribute("aria-pressed", String(onlyLeft));
     $("resetBtn").hidden = editing || !done;
     $("copyBtn").hidden = !editing;
-    $("deleteBtn").hidden = !editing || ordered().length < 2;
+    $("deleteBtn").hidden = !editing || ordered().length < 2 || currentId === "rep";
+    $("newJob").hidden = !canEdit || !loaded || editing;
 
     listEl.textContent = "";
     if (!loaded) { listEl.appendChild(el("p", { className: "note", textContent: "Hämtar listorna…" })); return; }
@@ -578,13 +672,13 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
     list.sections = list.sections.filter(function (s) { return s.title.trim() || s.items.length; });
     if (!list.title || !list.title.trim()) list.title = "Namnlös lista";
   }
-  function createList(from) {
+  function createList(from, name) {
     var max = ordered().reduce(function (m, l) { return Math.max(m, l.order || 0); }, 0);
     var id = "l" + newId();
     lists[id] = {
       id: id, order: max + 1,
-      title: from ? from.title + " (kopia)" : "Ny lista",
-      blurb: from ? from.blurb || "" : "",
+      title: name || (from ? from.title + " (kopia)" : "Ny lista"),
+      blurb: name ? "" : (from ? from.blurb || "" : ""),
       sections: from ? clone(from.sections) : []
     };
     currentId = id;
@@ -599,6 +693,16 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
     if (!current()) { createList(null); editing = true; render(); return; }
     editing = !editing;
     if (!editing) { prune(current()); saveList(); }
+    render();
+    window.scrollTo(0, 0);
+  });
+  $("newJob").addEventListener("click", function () {
+    var tpl = lists.rep;
+    if (!tpl) return;
+    var name = (window.prompt("Namn på jobbet (till exempel Kyiv november)") || "").trim();
+    if (!name) return;
+    createList(tpl, name);
+    onlyLeft = false;
     render();
     window.scrollTo(0, 0);
   });
@@ -682,7 +786,7 @@ textarea { flex: 1; min-width: 0; min-height: 2.75rem; font: inherit; color: var
       if (loaded && JSON.stringify(next) === JSON.stringify(lists)) return;
       lists = next;
       syncBaseline();
-      var wanted = location.hash.slice(1);
+      var wanted = location.hash.slice(1); if (!wanted) { try { wanted = localStorage.getItem("checklista:senast") || ""; } catch (e) {} }
       if (!loaded && lists[wanted]) currentId = wanted;
       if (!lists[currentId]) currentId = ordered().length ? ordered()[0].id : null;
       loaded = true;
